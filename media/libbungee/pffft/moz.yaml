@@ -1,0 +1,16 @@
+schema: 1
+
+origin:
+  name: pffft
+  description: Pretty Fast FFT used by Bungee
+  url: https://bitbucket.org/jpommier/pffft
+  release: 02fe7715a5bf8bfd914681c53429600f94e0f536
+  revision: 02fe7715a5bf8bfd914681c53429600f94e0f536
+  license: BSD-3-Clause
+  license-file: LICENSE
+
+vendoring:
+  url: https://bitbucket.org/jpommier/pffft
+  tracking: commit
+  patches:
+    - firefox-symbol-prefix.patch
