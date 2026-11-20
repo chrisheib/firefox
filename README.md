@@ -1,5 +1,17 @@
 ![Firefox Browser](./docs/readme/readme-banner.svg)
 
+## Audio-Playground fork
+Try different audio backends and time stretching algorithms with the button next to extensions, or via cli:
+```
+nix-shell --run './mach run -- --audio-engine ff-upstream'
+nix-shell --run './mach run -- --audio-engine signalsmith-stretch'
+nix-shell --run './mach run -- --audio-engine bungee'
+
+./mach run -- --audio-engine ff-upstream
+./mach run -- --audio-engine signalsmith-stretch
+./mach run -- --audio-engine bungee
+```
+
 [Firefox](https://firefox.com/) is a fast, reliable and private web browser from the non-profit [Mozilla organization](https://mozilla.org/).
 
 ### Contributing
