@@ -1,0 +1,19 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: "Audio/Video: Playback"
+
+origin:
+  name: signalsmith-linear
+  description: C++ FFT and linear algebra helpers used by Signalsmith Stretch
+  url: https://github.com/Signalsmith-Audio/linear
+  release: 7bb1c8f36794d6980080ce817c91f8da8fe56a66 (0.6.6)
+  revision: 7bb1c8f36794d6980080ce817c91f8da8fe56a66
+  license: MIT
+  license-file: LICENSE.txt
+
+vendoring:
+  url: https://github.com/Signalsmith-Audio/linear
+  source-hosting: github
+  tracking: commit
