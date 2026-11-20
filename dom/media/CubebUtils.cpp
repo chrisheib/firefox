@@ -54,6 +54,8 @@
 
 #define AUDIOIPC_STACK_SIZE_DEFAULT (64 * 4096)
 
+#define AUDIO_ENGINE_FF_UPSTREAM "ff-upstream"
+#define PREF_AUDIO_ENGINE "media.audio_engine"
 #define PREF_VOLUME_SCALE "media.volume_scale"
 #define PREF_CUBEB_BACKEND "media.cubeb.backend"
 #define PREF_CUBEB_OUTPUT_DEVICE "media.cubeb.output_device"
@@ -100,6 +102,8 @@ enum class CubebState {
   Initialized,
   Shutdown
 } sCubebState = CubebState::Uninitialized;
+CubebUtils::AudioEngine sActiveAudioEngine =
+    CubebUtils::AudioEngine::FFUpstream;
 StaticRefPtr<CubebUtils::CubebHandle> sCubebHandle;
 double sVolumeScale = 1.0;
 uint32_t sCubebPlaybackLatencyInMilliseconds = 100;
@@ -814,7 +818,19 @@ static const char* gCallbackPrefs[] = {
     nullptr,
 };
 
-void InitLibrary() {
+AudioEngine GetAudioEngine() {
+  nsAutoCString engine;
+  Preferences::GetCString(PREF_AUDIO_ENGINE, engine);
+  if (engine.EqualsLiteral(AUDIO_ENGINE_FF_UPSTREAM)) {
+    return AudioEngine::FFUpstream;
+  }
+
+  MOZ_LOG_FMT(gCubebLog, LogLevel::Warning,
+              "Unsupported audio engine '{}'; using ff-upstream", engine);
+  return AudioEngine::FFUpstream;
+}
+
+static void InitFFUpstreamLibrary() {
   Preferences::RegisterCallbacksAndCall(PrefChanged, gInitCallbackPrefs);
   Preferences::RegisterCallbacks(PrefChanged, gCallbackPrefs);
 
@@ -852,7 +868,16 @@ void InitLibrary() {
   (void)CallbackThreadRegistry::Get();
 }
 
-void ShutdownLibrary() {
+void InitLibrary() {
+  sActiveAudioEngine = GetAudioEngine();
+  switch (sActiveAudioEngine) {
+    case AudioEngine::FFUpstream:
+      InitFFUpstreamLibrary();
+      return;
+  }
+}
+
+static void ShutdownFFUpstreamLibrary() {
   Preferences::UnregisterCallbacks(PrefChanged, gInitCallbackPrefs);
   Preferences::UnregisterCallbacks(PrefChanged, gCallbackPrefs);
 
@@ -877,6 +902,14 @@ void ShutdownLibrary() {
   sIPCConnection = nullptr;
   ShutdownAudioIPCServer();
 #endif
+}
+
+void ShutdownLibrary() {
+  switch (sActiveAudioEngine) {
+    case AudioEngine::FFUpstream:
+      ShutdownFFUpstreamLibrary();
+      return;
+  }
 }
 
 bool SandboxEnabled() {

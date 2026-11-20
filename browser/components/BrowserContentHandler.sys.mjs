@@ -13,6 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   AuthProvider:
     "moz-src:///browser/components/aiwindow/models/AuthProvider.sys.mjs",
+  AudioEngine: "resource:///modules/AudioEngine.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   FirstStartup: "resource://gre/modules/FirstStartup.sys.mjs",
@@ -492,6 +493,15 @@ nsBrowserContentHandler.prototype = {
 
   /* nsICommandLineHandler */
   handle: function bch_handle(cmdLine) {
+    let audioEngine = cmdLine.handleFlagWithParam("audio-engine", false);
+    if (audioEngine) {
+      try {
+        lazy.AudioEngine.select(audioEngine);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
     if (
       cmdLine.handleFlag("kiosk", false) ||
       cmdLine.handleFlagWithParam("kiosk-monitor", false)
@@ -738,6 +748,7 @@ nsBrowserContentHandler.prototype = {
   get helpInfo() {
     let info =
       "  --browser          Open a browser window.\n" +
+      "  --audio-engine <id> Select the audio engine used by the browser.\n" +
       "  --new-window <url> Open <url> in a new window.\n" +
       "  --new-tab <url>    Open <url> in a new tab.\n" +
       "  --url-background <url> Open <url> in a background tab.\n" +

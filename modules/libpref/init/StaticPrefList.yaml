@@ -12554,6 +12554,12 @@
   value: 512000   # Measured in KiB
   mirror: always
 
+# Audio engine implementation used at process startup.
+- name: media.audio_engine
+  type: String
+  value: "ff-upstream"
+  mirror: never
+
 # Size of file backed MediaCache while on a connection which is cellular (3G,
 # etc), and thus assumed to be "expensive".
 - name: media.cache_size.cellular

@@ -85,6 +85,10 @@ toolbar .toolbarbutton-1 {
   list-style-image: url("chrome://browser/skin/downloads/downloads.svg");
 }
 
+#audio-engine-button {
+  list-style-image: url("chrome://global/skin/media/audio.svg");
+}
+
 #open-file-button {
   list-style-image: url("chrome://browser/skin/open.svg");
 }
