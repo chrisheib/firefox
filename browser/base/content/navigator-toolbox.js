@@ -5,6 +5,7 @@
 ChromeUtils.defineESModuleGetters(this, {
   AIWindowUI:
     "moz-src:///browser/components/aiwindow/ui/modules/AIWindowUI.sys.mjs",
+  AudioEngine: "resource:///modules/AudioEngine.sys.mjs",
 });
 
 document.addEventListener(
@@ -37,6 +38,24 @@ document.addEventListener(
             new PlacesMenu(event, `place:parent=${placeMap[event.target.id]}`);
           }
           break;
+
+        case "audio-engine-popup": {
+          event.target.replaceChildren();
+          for (let engine of AudioEngine.engines) {
+            let item = document.createXULElement("menuitem");
+            item.classList.add("audio-engine-menuitem");
+            item.setAttribute("type", "radio");
+            item.setAttribute("name", "audio-engine");
+            item.setAttribute("value", engine.id);
+            item.setAttribute(
+              "checked",
+              engine.id == AudioEngine.selected ? "true" : "false"
+            );
+            document.l10n.setAttributes(item, engine.labelL10nId);
+            event.target.appendChild(item);
+          }
+          break;
+        }
       }
     }
     navigatorToolbox.addEventListener("popupshowing", onPopupShowing);
@@ -50,12 +69,23 @@ document.addEventListener(
         #bookmarks-toolbar-button,
         #PlacesToolbar,
         #import-button,
+        .audio-engine-menuitem,
         #bookmarks-menu-button,
         #BMB_bookmarksPopup,
         #BMB_viewBookmarksSidebar,
         #BMB_searchBookmarks,
         #BMB_viewBookmarksToolbar`);
       if (!element) {
+        return;
+      }
+
+      if (element.classList.contains("audio-engine-menuitem")) {
+        let changed = AudioEngine.select(element.getAttribute("value"));
+        if (changed) {
+          Services.startup.quit(
+            Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart
+          );
+        }
         return;
       }
 

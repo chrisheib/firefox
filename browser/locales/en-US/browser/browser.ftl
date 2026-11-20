@@ -1298,6 +1298,13 @@ navbar-accessible =
 navbar-downloads =
     .label = Downloads
 
+navbar-audio-engine =
+    .label = Audio engine
+    .tooltiptext = Audio engine
+
+audio-engine-ff-upstream =
+    .label = FF Upstream
+
 navbar-overflow-2 =
     .tooltiptext = More tools
 
