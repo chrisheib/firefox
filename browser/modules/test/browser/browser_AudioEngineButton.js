@@ -14,9 +14,18 @@ add_task(async function test_audio_engine_toolbar_button() {
   EventUtils.synthesizeMouseAtCenter(button, {}, win);
   await shown;
 
-  Assert.equal(popup.children.length, 1);
-  Assert.equal(popup.firstElementChild.value, "ff-upstream");
-  Assert.equal(popup.firstElementChild.getAttribute("checked"), "true");
+  let engines = popup.querySelectorAll(".audio-engine-menuitem");
+  Assert.equal(engines.length, 3);
+  Assert.equal(engines[0].value, "ff-upstream");
+  Assert.equal(engines[0].getAttribute("checked"), "true");
+  Assert.equal(
+    popup.querySelectorAll(".audio-engine-preset-menuitem").length,
+    12
+  );
+  Assert.equal(
+    popup.querySelectorAll(".audio-engine-setting-menuitem").length,
+    37
+  );
 
   popup.hidePopup();
 });

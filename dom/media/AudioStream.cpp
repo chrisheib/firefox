@@ -23,6 +23,7 @@
 #if defined(XP_WIN)
 #  include "nsXULAppAPI.h"
 #endif
+#include "AudioTimeStretcher.h"
 #include "CallbackThreadRegistry.h"
 #include "RLBoxSoundTouch.h"
 #include "Tracing.h"
@@ -202,35 +203,14 @@ nsresult AudioStream::EnsureTimeStretcherInitialized() {
     });
 #endif
 
-    auto timestretcher = std::make_unique<RLBoxSoundTouch>();
-    if (!timestretcher || !timestretcher->Init()) {
+    auto timestretcher = MakeUnique<AudioTimeStretcher>();
+    if (!timestretcher ||
+        !timestretcher->Init(mAudioClock.GetInputRate(), mOutChannels)) {
       return NS_ERROR_FAILURE;
     }
     mTimeStretcher = timestretcher.release();
     mStretcherSourceFrames = 0;
     mStretcherMediaFrames = 0;
-
-    mTimeStretcher->setSampleRate(mAudioClock.GetInputRate());
-    mTimeStretcher->setChannels(mOutChannels);
-    mTimeStretcher->setPitch(1.0);
-
-    // SoundTouch v2.1.2 uses automatic time-stretch settings with the following
-    // values:
-    // Tempo 0.5: 90ms sequence, 20ms seekwindow, 8ms overlap
-    // Tempo 2.0: 40ms sequence, 15ms seekwindow, 8ms overlap
-    // We are going to use a smaller 10ms sequence size to improve speech
-    // clarity, giving more resolution at high tempo and less reverb at low
-    // tempo. Maintain 15ms seekwindow and 8ms overlap for smoothness.
-    mTimeStretcher->setSetting(
-        SETTING_SEQUENCE_MS,
-        StaticPrefs::media_audio_playbackrate_soundtouch_sequence_ms());
-    mTimeStretcher->setSetting(
-        SETTING_SEEKWINDOW_MS,
-        StaticPrefs::media_audio_playbackrate_soundtouch_seekwindow_ms());
-    mTimeStretcher->setSetting(
-        SETTING_OVERLAP_MS,
-        StaticPrefs::media_audio_playbackrate_soundtouch_overlap_ms());
-
     PrimeTimeStretcher();
   }
   return NS_OK;
@@ -239,10 +219,7 @@ nsresult AudioStream::EnsureTimeStretcherInitialized() {
 void AudioStream::PrimeTimeStretcher() {
   AssertIsOnAudioThread();
   MOZ_ASSERT(mTimeStretcher);
-  const uint32_t primeFrames =
-      (StaticPrefs::media_audio_playbackrate_soundtouch_sequence_ms() +
-       StaticPrefs::media_audio_playbackrate_soundtouch_seekwindow_ms()) *
-      mAudioClock.GetInputRate() / 1000;
+  const uint32_t primeFrames = mTimeStretcher->initialDelayFrames();
   // Feed and drain the silence in small chunks, so that up to 8 channels need
   // no Gecko heap allocation on the audio thread.
   constexpr uint32_t kChunkFrames = 128;
@@ -635,11 +612,9 @@ uint32_t AudioStream::GetUnprocessed(AudioBufferWriter& aWriter) {
     // Get number of samples and based on this either receive samples or write
     // silence.  At worst, the attacker can supply weird sound samples or
     // result in us writing silence.
-    auto numSamples = mTimeStretcher->numSamples().unverified_safe_because(
-        "We only use this to decide whether to receive samples or write "
-        "silence.");
+    auto numSamples = mTimeStretcher->numSamples();
     if (numSamples) {
-      RLBoxSoundTouch* timeStretcher = mTimeStretcher;
+      AudioTimeStretcher* timeStretcher = mTimeStretcher;
       fromStretcher = aWriter.Write(
           [timeStretcher](AudioDataValue* aPtr, uint32_t aFrames) {
             return timeStretcher->receiveSamples(aPtr, aFrames);
@@ -648,8 +623,7 @@ uint32_t AudioStream::GetUnprocessed(AudioBufferWriter& aWriter) {
       // Flushing pads the input with silence that SoundTouch keeps counting as
       // owed output. Once the flushed output has played, start the next rate
       // change from a clean, primed stretcher.
-      if (mTimeStretcher->numSamples().unverified_safe_because(
-              "Only used to decide whether to reset the stretcher.") == 0) {
+      if (mTimeStretcher->numSamples() == 0) {
         // Keep the source and media totals, so that source the clock has not
         // counted yet is counted against later stretcher output.
         mTimeStretcher->clear();
@@ -688,9 +662,7 @@ uint32_t AudioStream::GetTimeStretched(AudioBufferWriter& aWriter) {
   // (i.e., under attacker control) we'll either not write anything or keep
   // writing noise. This is safe because all the memory operations within the
   // loop (and after) are checked.
-  while (mTimeStretcher->numSamples().unverified_safe_because(
-             "Only used to decide whether to put samples.") <
-         aWriter.Available()) {
+  while (mTimeStretcher->numSamples() < aWriter.Available()) {
     // pop into a temp buffer, and put into the stretcher.
     AutoTArray<AudioDataValue, 1000> buf;
     auto size = CheckedUint32(mOutChannels) * toPopFrames;

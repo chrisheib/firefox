@@ -360,6 +360,7 @@ if CONFIG["ENABLE_TESTS"] or CONFIG["FUZZING"]:
 # ImagePixelFormat.cpp, MediaData.cpp : ambiguous compilation error caused by
 # Mac OS X headers.
 SOURCES += [
+    "AudioTimeStretcher.cpp",
     "ImagePixelFormat.cpp",
     "MediaData.cpp",
 ]
@@ -387,6 +388,9 @@ LOCAL_INCLUDES += [
     "/dom/media/webrtc",
     "/layout/generic",
     "/layout/xul",
+    "/media/libbungee",
+    "/media/libsignalsmithlinear/include",
+    "/media/libsignalsmithstretch/include",
     "/media/libyuv/libyuv/include",
     "/netwerk/base",
     "/toolkit/content/tests/browser/",

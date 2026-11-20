@@ -31,7 +31,7 @@ struct CubebDestroyPolicy {
 class AudioStream;
 class FrameHistory;
 class AudioConfig;
-class RLBoxSoundTouch;
+class AudioTimeStretcher;
 
 // A struct that contains the number of frames serviced or underrun by a
 // callback, alongside the sample-rate for this callback (in case of playback
@@ -442,7 +442,7 @@ class AudioStream final {
   bool CheckThreadIdChanged();
   void AssertIsOnAudioThread() const;
 
-  RLBoxSoundTouch* mTimeStretcher;
+  AudioTimeStretcher* mTimeStretcher;
   AudioClock mAudioClock;
 
   WavDumper mDumpFile;

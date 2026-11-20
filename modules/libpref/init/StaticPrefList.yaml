@@ -14624,6 +14624,31 @@
   value: 8
   mirror: always
 
+- name: media.audio.playbackrate.signalsmith_block_ms
+  type: RelaxedAtomicInt32
+  value: 120
+  mirror: always
+
+- name: media.audio.playbackrate.signalsmith_interval_ms
+  type: RelaxedAtomicInt32
+  value: 30
+  mirror: always
+
+- name: media.audio.playbackrate.signalsmith_split_computation
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: media.audio.playbackrate.bungee_hop_adjust
+  type: RelaxedAtomicInt32
+  value: 0
+  mirror: always
+
+- name: media.audio.playbackrate.bungee_chunk_frames
+  type: RelaxedAtomicInt32
+  value: 2048
+  mirror: always
+
 # Reuse the cubeb audio stream across a seek instead of destroying and
 # recreating it. The stream is kept running (not stopped) and its clock is
 # rebased in place, avoiding the synchronous cubeb_stream_start on the seek

@@ -28,10 +28,6 @@ namespace CubebUtils {
 
 typedef cubeb_devid AudioDeviceID;
 
-enum class AudioEngine {
-  FFUpstream,
-};
-
 template <AudioSampleFormat N>
 struct ToCubebFormat {
   static const cubeb_sample_format value = CUBEB_SAMPLE_FLOAT32NE;
@@ -64,7 +60,6 @@ class CubebHandle {
 // Initialize Audio Library. Some Audio backends require initializing the
 // library before using it.
 void InitLibrary();
-AudioEngine GetAudioEngine();
 
 // Shutdown Audio Library. Some Audio backends require shutting down the
 // library after using it.

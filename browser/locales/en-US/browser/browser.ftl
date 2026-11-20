@@ -1387,6 +1387,93 @@ navbar-audio-engine =
 audio-engine-ff-upstream =
     .label = FF Upstream
 
+audio-engine-signalsmith =
+    .label = Signalsmith Stretch
+
+audio-engine-bungee =
+    .label = Bungee
+
+audio-engine-settings-ff-upstream =
+    .label = FF Upstream settings
+
+audio-engine-settings-signalsmith =
+    .label = Signalsmith settings
+
+audio-engine-settings-bungee =
+    .label = Bungee settings
+
+audio-engine-presets =
+    .label = Presets
+
+audio-engine-preset-firefox-default =
+    .label = Firefox default
+
+audio-engine-preset-speech =
+    .label = Speech
+
+audio-engine-preset-balanced =
+    .label = Balanced
+
+audio-engine-preset-music =
+    .label = Music
+
+audio-engine-preset-smooth =
+    .label = Smooth
+
+audio-engine-preset-low-latency =
+    .label = Low latency
+
+audio-engine-preset-low-cpu =
+    .label = Low CPU
+
+audio-engine-preset-dense-music =
+    .label = Dense music
+
+audio-engine-setting-soundtouch-sequence =
+    .label = Sequence length
+
+audio-engine-setting-soundtouch-seek-window =
+    .label = Seek window
+
+audio-engine-setting-soundtouch-overlap =
+    .label = Overlap
+
+audio-engine-setting-signalsmith-block =
+    .label = Spectral block
+
+audio-engine-setting-signalsmith-interval =
+    .label = Spectral interval
+
+audio-engine-setting-signalsmith-split =
+    .label = Split computation
+
+audio-engine-setting-bungee-hop =
+    .label = Synthesis hop adjustment
+
+audio-engine-setting-bungee-chunk =
+    .label = Input chunk
+
+# Variables:
+#   $value (Number): a duration in milliseconds
+audio-engine-value-milliseconds =
+    .label = { $value } ms
+
+# Variables:
+#   $value (Number): an input frame count
+audio-engine-value-frames =
+    .label = { $value } frames
+
+# Variables:
+#   $value (Number): an integer setting value
+audio-engine-value-number =
+    .label = { $value }
+
+audio-engine-value-enabled =
+    .label = Enabled
+
+audio-engine-value-disabled =
+    .label = Disabled
+
 navbar-overflow-2 =
     .tooltiptext = More tools
 
