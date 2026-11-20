@@ -57,6 +57,8 @@ pkgs.mkShell.override { inherit stdenv; } {
     echo "Firefox core development shell loaded (Clang/Rust)"
     echo " Debuggers: gdb, lldb"
     echo " Language server: rust-analyzer"
+    echo "Start firefox:"
+    echo " ./mach run"
     echo "=========================================================="
   '';
 }

@@ -43,6 +43,7 @@ UNIFIED_SOURCES += [
     "TestAudioSegment.cpp",
     "TestAudioSinkWrapper.cpp",
     "TestAudioStream.cpp",
+    "TestAudioTimeStretcher.cpp",
     "TestAudioTrackEncoder.cpp",
     "TestAudioTrackGraph.cpp",
     "TestAVSync.cpp",

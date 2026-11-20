@@ -4,8 +4,9 @@
 
 #include "AudioDecoderInputTrack.h"
 
+#include "AudioTimeStretcher.h"
 #include "MediaData.h"
-#include "RLBoxSoundTouch.h"
+#include "MediaInfo.h"
 #include "Tracing.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ScopeExit.h"
@@ -389,8 +390,7 @@ TrackTime AudioDecoderInputTrack::AppendBufferedDataToOutput(
 
   unsigned int numSamples = 0;
   if (mTimeStretcher) {
-    numSamples = mTimeStretcher->numSamples().unverified_safe_because(
-        "Only used for logging.");
+    numSamples = mTimeStretcher->numSamples();
   }
 
   LOG("Appended {}, consumed {}, remaining raw buffered {}, remaining "
@@ -422,14 +422,9 @@ TrackTime AudioDecoderInputTrack::AppendTimeStretchedDataToSegment(
   // into the time stretcher until the amount of samples that time stretcher
   // finishes processed reaches or exceeds the expected duration.
   TrackTime consumedDuration = 0;
-  mTimeStretcher->numSamples().copy_and_verify([&](auto numSamples) {
-    // Attacker controlled soundtouch can return a bogus numSamples, which
-    // can result in filling data into the time stretcher (or not).  This is
-    // safe as long as filling (and getting) data is checked.
-    if (numSamples < aExpectedDuration) {
-      consumedDuration = FillDataToTimeStretcher(aExpectedDuration);
-    }
-  });
+  if (mTimeStretcher->numSamples() < aExpectedDuration) {
+    consumedDuration = FillDataToTimeStretcher(aExpectedDuration);
+  }
   MOZ_ASSERT(consumedDuration >= 0);
   (void)GetDataFromTimeStretcher(aExpectedDuration, aOutput);
   return consumedDuration;
@@ -485,13 +480,7 @@ TrackTime AudioDecoderInputTrack::FillDataToTimeStretcher(
     mTimeStretcher->putSamples(mInterleavedBuffer.Elements(),
                                aChunk->GetDuration());
     consumedDuration += aChunk->GetDuration();
-    return mTimeStretcher->numSamples().copy_and_verify(
-        [&aExpectedDuration](auto numSamples) {
-          // Attacker controlled soundtouch can return a bogus numSamples to
-          // return early or force additional iterations. This is safe
-          // as long as all the writes in the lambda are checked.
-          return numSamples >= aExpectedDuration;
-        });
+    return mTimeStretcher->numSamples() >= aExpectedDuration;
   });
   mBufferedData.RemoveLeading(consumedDuration);
   return consumedDuration;
@@ -523,8 +512,7 @@ TrackTime AudioDecoderInputTrack::DrainStretchedDataIfNeeded(
   if (!mTimeStretcher) {
     return 0;
   }
-  auto numSamples = mTimeStretcher->numSamples().unverified_safe_because(
-      "Bogus numSamples can result in draining the stretched data (or not).");
+  auto numSamples = mTimeStretcher->numSamples();
   if (numSamples == 0) {
     return 0;
   }
@@ -537,19 +525,15 @@ TrackTime AudioDecoderInputTrack::GetDataFromTimeStretcher(
   MOZ_ASSERT(mTimeStretcher);
   MOZ_ASSERT(aExpectedDuration >= 0);
 
-  auto numSamples =
-      mTimeStretcher->numSamples().unverified_safe_because("Used for logging");
+  auto numSamples = mTimeStretcher->numSamples();
 
-  mTimeStretcher->numUnprocessedSamples().copy_and_verify([&](auto samples) {
-    if (HasSentAllData() && samples) {
-      mTimeStretcher->flush();
-      LOG("Flush {} frames from the time stretcher", numSamples);
-    }
-  });
+  if (HasSentAllData() && mTimeStretcher->numUnprocessedSamples()) {
+    mTimeStretcher->flush();
+    LOG("Flush {} frames from the time stretcher", numSamples);
+  }
 
   // Flushing may have change the number of samples
-  numSamples = mTimeStretcher->numSamples().unverified_safe_because(
-      "Used to decide to flush (or not), which is checked.");
+  numSamples = mTimeStretcher->numSamples();
 
   const TrackTime available =
       std::min((TrackTime)numSamples, aExpectedDuration);
@@ -624,17 +608,16 @@ uint32_t AudioDecoderInputTrack::NumberOfChannels() const {
 #ifdef ENABLE_TESTS
 uint32_t AudioDecoderInputTrack::TimeStretcherSamplesForTesting() {
   AssertOnGraphThread();
-  return mTimeStretcher ? mTimeStretcher->numSamples().unverified_safe_because(
-                              "Only used by an AudioDecoderInputTrack gtest.")
-                        : 0;
+  return mTimeStretcher ? mTimeStretcher->numSamples() : 0;
 }
 #endif
 
 void AudioDecoderInputTrack::EnsureTimeStretcher() {
   AssertOnGraphThread();
   if (!mTimeStretcher) {
-    mTimeStretcher = std::make_unique<RLBoxSoundTouch>();
-    if (!mTimeStretcher->Init()) {
+    mTimeStretcher = std::make_unique<AudioTimeStretcher>();
+    if (!mTimeStretcher->Init(Graph()->GraphRate(),
+                              GetChannelCountForTimeStretcher())) {
       MOZ_LOG_FMT(gMediaDecoderLog, LogLevel::Error,
                   "AudioDecoderInputTrack={} Failed to initialize time "
                   "stretcher, audio will play at normal speed",
@@ -645,26 +628,6 @@ void AudioDecoderInputTrack::EnsureTimeStretcher() {
       return;
     }
 
-    mTimeStretcher->setSampleRate(Graph()->GraphRate());
-    mTimeStretcher->setChannels(GetChannelCountForTimeStretcher());
-    mTimeStretcher->setPitch(1.0);
-
-    // SoundTouch v2.1.2 uses automatic time-stretch settings with the following
-    // values:
-    // Tempo 0.5: 90ms sequence, 20ms seekwindow, 8ms overlap
-    // Tempo 2.0: 40ms sequence, 15ms seekwindow, 8ms overlap
-    // We are going to use a smaller 10ms sequence size to improve speech
-    // clarity, giving more resolution at high tempo and less reverb at low
-    // tempo. Maintain 15ms seekwindow and 8ms overlap for smoothness.
-    mTimeStretcher->setSetting(
-        SETTING_SEQUENCE_MS,
-        StaticPrefs::media_audio_playbackrate_soundtouch_sequence_ms());
-    mTimeStretcher->setSetting(
-        SETTING_SEEKWINDOW_MS,
-        StaticPrefs::media_audio_playbackrate_soundtouch_seekwindow_ms());
-    mTimeStretcher->setSetting(
-        SETTING_OVERLAP_MS,
-        StaticPrefs::media_audio_playbackrate_soundtouch_overlap_ms());
     SetTempoAndRateForTimeStretcher();
     LOG("Create TimeStretcher (channel={}, playbackRate={}, preservePitch={})",
         GetChannelCountForTimeStretcher(), mPlaybackRate, mPreservesPitch);

@@ -54,6 +54,75 @@ document.addEventListener(
             document.l10n.setAttributes(item, engine.labelL10nId);
             event.target.appendChild(item);
           }
+
+          event.target.appendChild(document.createXULElement("menuseparator"));
+          for (let engine of AudioEngine.engines) {
+            let settingsMenu = document.createXULElement("menu");
+            document.l10n.setAttributes(settingsMenu, engine.settingsL10nId);
+            let settingsPopup = document.createXULElement("menupopup");
+            settingsMenu.appendChild(settingsPopup);
+            event.target.appendChild(settingsMenu);
+
+            let presetsMenu = document.createXULElement("menu");
+            document.l10n.setAttributes(presetsMenu, "audio-engine-presets");
+            let presetsPopup = document.createXULElement("menupopup");
+            presetsMenu.appendChild(presetsPopup);
+            settingsPopup.appendChild(presetsMenu);
+
+            let selectedPreset = AudioEngine.selectedPreset(engine);
+            for (let preset of engine.presets) {
+              let item = document.createXULElement("menuitem");
+              item.classList.add("audio-engine-preset-menuitem");
+              item.setAttribute("type", "radio");
+              item.setAttribute("name", `${engine.id}-preset`);
+              item.setAttribute(
+                "checked",
+                preset.id == selectedPreset ? "true" : "false"
+              );
+              item.dataset.engineId = engine.id;
+              item.dataset.presetId = preset.id;
+              document.l10n.setAttributes(item, preset.labelL10nId);
+              presetsPopup.appendChild(item);
+            }
+
+            settingsPopup.appendChild(
+              document.createXULElement("menuseparator")
+            );
+            for (let [settingIndex, setting] of engine.settings.entries()) {
+              let settingMenu = document.createXULElement("menu");
+              document.l10n.setAttributes(settingMenu, setting.labelL10nId);
+              let settingPopup = document.createXULElement("menupopup");
+              settingMenu.appendChild(settingPopup);
+              settingsPopup.appendChild(settingMenu);
+
+              for (let [index, value] of setting.values.entries()) {
+                let item = document.createXULElement("menuitem");
+                item.classList.add("audio-engine-setting-menuitem");
+                item.setAttribute("type", "radio");
+                item.setAttribute("name", setting.pref);
+                item.setAttribute(
+                  "checked",
+                  value === AudioEngine.getSetting(setting) ? "true" : "false"
+                );
+                item.dataset.engineId = engine.id;
+                item.dataset.settingIndex = String(settingIndex);
+                item.dataset.valueIndex = String(index);
+                if (setting.type == "bool") {
+                  document.l10n.setAttributes(
+                    item,
+                    value
+                      ? "audio-engine-value-enabled"
+                      : "audio-engine-value-disabled"
+                  );
+                } else {
+                  document.l10n.setAttributes(item, setting.valueL10nId, {
+                    value,
+                  });
+                }
+                settingPopup.appendChild(item);
+              }
+            }
+          }
           break;
         }
       }
@@ -70,6 +139,8 @@ document.addEventListener(
         #PlacesToolbar,
         #import-button,
         .audio-engine-menuitem,
+        .audio-engine-preset-menuitem,
+        .audio-engine-setting-menuitem,
         #bookmarks-menu-button,
         #BMB_bookmarksPopup,
         #BMB_viewBookmarksSidebar,
@@ -79,8 +150,24 @@ document.addEventListener(
         return;
       }
 
+      let changed = false;
       if (element.classList.contains("audio-engine-menuitem")) {
-        let changed = AudioEngine.select(element.getAttribute("value"));
+        changed = AudioEngine.select(element.getAttribute("value"));
+      } else if (element.classList.contains("audio-engine-preset-menuitem")) {
+        changed = AudioEngine.setPreset(
+          element.dataset.engineId,
+          element.dataset.presetId
+        );
+      } else if (element.classList.contains("audio-engine-setting-menuitem")) {
+        let engine = AudioEngine.getDefinition(element.dataset.engineId);
+        let valueIndex = Number(element.dataset.valueIndex);
+        let settingIndex = Number(element.dataset.settingIndex);
+        let setting = engine.settings[settingIndex];
+        changed = AudioEngine.setSetting(setting, setting.values[valueIndex]);
+      } else {
+        changed = null;
+      }
+      if (changed !== null) {
         if (changed) {
           Services.startup.quit(
             Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart

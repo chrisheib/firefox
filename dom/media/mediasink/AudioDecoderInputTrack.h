@@ -23,7 +23,7 @@ namespace mozilla {
 
 class AudioData;
 class AudioInfo;
-class RLBoxSoundTouch;
+class AudioTimeStretcher;
 
 /**
  * AudioDecoderInputTrack is used as a source for the audio decoder data, which
@@ -227,7 +227,7 @@ class AudioDecoderInputTrack final : public ProcessedMediaTrack {
   bool mSentAllData = false;
 
   // This is used to adjust the playback rate and pitch.
-  std::unique_ptr<RLBoxSoundTouch> mTimeStretcher;
+  std::unique_ptr<AudioTimeStretcher> mTimeStretcher;
 
   // Buffers that would be used for the time stretching.
   AutoTArray<AudioDataValue, 2> mInterleavedBuffer;
