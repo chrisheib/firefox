@@ -1,0 +1,51 @@
+--- a/pffft.h
++++ b/pffft.h
+@@ -77,6 +77,22 @@
+ #ifndef PFFFT_H
+ #define PFFFT_H
+ 
++#define pffft_new_setup bungee_pffft_new_setup
++#define pffft_destroy_setup bungee_pffft_destroy_setup
++#define pffft_transform bungee_pffft_transform
++#define pffft_transform_ordered bungee_pffft_transform_ordered
++#define pffft_zreorder bungee_pffft_zreorder
++#define pffft_zconvolve_accumulate bungee_pffft_zconvolve_accumulate
++#define pffft_aligned_malloc bungee_pffft_aligned_malloc
++#define pffft_aligned_free bungee_pffft_aligned_free
++#define pffft_simd_size bungee_pffft_simd_size
++#define pffft_transform_internal bungee_pffft_transform_internal
++#define pffft_cplx_preprocess bungee_pffft_cplx_preprocess
++#define pffft_cplx_finalize bungee_pffft_cplx_finalize
++#define cfftf1_ps bungee_cfftf1_ps
++#define cffti1_ps bungee_cffti1_ps
++#define validate_pffft_simd bungee_validate_pffft_simd
++
+ #include <stddef.h> // for size_t
+ 
+ #ifdef __cplusplus
+--- a/fftpack.h
++++ b/fftpack.h
+@@ -45,6 +45,23 @@
+ #ifndef FFTPACK_H
+ #define FFTPACK_H
+ 
++#define cffti bungee_fftcfft_i
++#define cfftf bungee_fftcfft_f
++#define cfftb bungee_fftcfft_b
++#define rffti bungee_fftrfft_i
++#define rfftf bungee_fftrfft_f
++#define rfftb bungee_fftrfft_b
++#define cosqi bungee_fftcosq_i
++#define cosqf bungee_fftcosq_f
++#define cosqb bungee_fftcosq_b
++#define costi bungee_fftcost_i
++#define cost bungee_fftcost
++#define sinqi bungee_fftsinq_i
++#define sinqb bungee_fftsinq_b
++#define sinqf bungee_fftsinq_f
++#define sinti bungee_fftsint_i
++#define sint bungee_fftsint
++
+ #ifdef __cplusplus
+ extern "C" {
+ #endif

@@ -1,0 +1,15 @@
+schema: 1
+
+origin:
+  name: eigen
+  description: C++ template library for linear algebra
+  url: https://eigen.tuxfamily.org/
+  release: c29c800126982c561e8d0b9255dc65474cd98de3
+  revision: c29c800126982c561e8d0b9255dc65474cd98de3
+  license: MPL-2.0
+  license-file: COPYING.MPL2
+
+vendoring:
+  url: https://github.com/eigenteam/eigen-git-mirror
+  source-hosting: github
+  tracking: commit

@@ -1,0 +1,19 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: "Audio/Video: Playback"
+
+origin:
+  name: bungee
+  description: Real-time audio time stretching and pitch shifting library
+  url: https://github.com/bungee-audio-stretch/bungee
+  release: 61f52bf34be577d189d388772ddfa3696dee77d8
+  revision: 61f52bf34be577d189d388772ddfa3696dee77d8
+  license: MPL-2.0
+  license-file: LICENSE
+
+vendoring:
+  url: https://github.com/bungee-audio-stretch/bungee
+  source-hosting: github
+  tracking: commit

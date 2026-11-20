@@ -1,0 +1,85 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+EXPORTS.bungee += [
+    "bungee/Bungee.h",
+    "bungee/Modes.h",
+    "bungee/Push.h",
+    "bungee/Stream.h",
+]
+
+LOCAL_INCLUDES += [
+    "bungee",
+    "eigen",
+    "pffft",
+    "src",
+]
+
+SOURCES += [
+    "pffft/fftpack.c",
+    "pffft/pffft.c",
+    "src/Assert.cpp",
+    "src/Fourier.cpp",
+    "src/Grain.cpp",
+    "src/Grains.cpp",
+    "src/Input.cpp",
+    "src/Instrumentation.cpp",
+    "src/Output.cpp",
+    "src/Partials.cpp",
+    "src/Stretch.cpp",
+    "src/Stretcher.cpp",
+    "src/Synthesis.cpp",
+    "src/Timing.cpp",
+    "src/version.cpp",
+    "src/Window.cpp",
+]
+
+DEFINES["BUNGEE_SELF_TEST"] = 0
+DEFINES["BUNGEE_VISIBILITY"] = ""
+DEFINES["EIGEN_DONT_PARALLELIZE"] = 1
+DEFINES["eigen_assert"] = "BUNGEE_ASSERT1"
+
+CXXFLAGS += ["-fwrapv"]
+SOURCES["src/version.cpp"].flags += [
+    '-DBUNGEE_VERSION=\\"61f52bf34\\"',
+]
+SOURCES["pffft/fftpack.c"].flags += [
+    "-ffast-math",
+    "-fno-finite-math-only",
+    "-fno-exceptions",
+]
+SOURCES["pffft/pffft.c"].flags += [
+    "-ffast-math",
+    "-fno-finite-math-only",
+    "-fno-exceptions",
+]
+
+FINAL_LIBRARY = "xul"
+AllowCompilerWarnings()
+
+LICENSES += ["libbungee", "libbungee-eigen", "libbungee-pffft"]
+LICENSES["libbungee"].title = "Bungee License"
+LICENSES["libbungee"].text = "LICENSE"
+LICENSES["libbungee"].notice = """
+<p>This license applies to <code>media/libbungee/src/</code> and
+<code>media/libbungee/bungee/</code>.</p>
+"""
+LICENSES["libbungee-eigen"].title = "Eigen License"
+LICENSES["libbungee-eigen"].text = "eigen/COPYING.MPL2"
+LICENSES["libbungee-eigen"].notice = """
+<p>This license applies to <code>media/libbungee/eigen/</code>.</p>
+"""
+LICENSES["libbungee-pffft"].title = "PFFFT License"
+LICENSES["libbungee-pffft"].text = "pffft/LICENSE"
+LICENSES["libbungee-pffft"].notice = """
+<p>This license applies to <code>media/libbungee/pffft/</code>.</p>
+"""
+LICENSED_UNDER += [
+    "libbungee",
+    "libbungee-eigen",
+    "libbungee-pffft",
+]
