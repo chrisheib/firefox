@@ -411,13 +411,14 @@ bool AudioTimeStretcher::Init(uint32_t aSampleRate, uint32_t aChannels) {
   nsAutoCString engine;
   Preferences::GetCString(PREF_AUDIO_ENGINE, engine);
   if (engine.Equals(FF_UPSTREAM_ENGINE)) {
-    mImpl = MakeUnique<Impl>(std::make_unique<SoundTouchTimeStretcher>());
+    mImpl = std::make_unique<Impl>(std::make_unique<SoundTouchTimeStretcher>());
   } else if (engine.Equals(SIGNALSMITH_ENGINE)) {
-    mImpl = MakeUnique<Impl>(std::make_unique<SignalsmithTimeStretcher>());
+    mImpl =
+        std::make_unique<Impl>(std::make_unique<SignalsmithTimeStretcher>());
   } else if (engine.Equals(BUNGEE_ENGINE)) {
-    mImpl = MakeUnique<Impl>(std::make_unique<BungeeTimeStretcher>());
+    mImpl = std::make_unique<Impl>(std::make_unique<BungeeTimeStretcher>());
   } else {
-    mImpl = MakeUnique<Impl>(std::make_unique<SoundTouchTimeStretcher>());
+    mImpl = std::make_unique<Impl>(std::make_unique<SoundTouchTimeStretcher>());
   }
   if (!mImpl->Init(aSampleRate, aChannels)) {
     mImpl = nullptr;

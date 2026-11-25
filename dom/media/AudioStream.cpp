@@ -203,7 +203,7 @@ nsresult AudioStream::EnsureTimeStretcherInitialized() {
     });
 #endif
 
-    auto timestretcher = MakeUnique<AudioTimeStretcher>();
+    auto timestretcher = std::make_unique<AudioTimeStretcher>();
     if (!timestretcher ||
         !timestretcher->Init(mAudioClock.GetInputRate(), mOutChannels)) {
       return NS_ERROR_FAILURE;
